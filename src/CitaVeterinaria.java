@@ -1,5 +1,6 @@
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 /**
  * Cita de la clínica veterinaria: una Cita cuyo cliente es el identificador
@@ -90,6 +91,47 @@ public abstract class CitaVeterinaria extends Cita {
 
     /** Texto con los datos propios de este tipo de cita. */
     public abstract String descripcion();
+
+    /**
+     * Método plantilla: comprueba las normas comunes a todas las citas, en este
+     * orden (domingo, horario, pasado, especialidad), y termina llamando a
+     * comprobarNormasPropias, que añade las normas de cada tipo de cita.
+     *
+     * @param ahora fecha y hora actuales
+     * @throws ClinicaException si la cita incumple alguna norma
+     */
+    public final void comprobarNormas(LocalDateTime ahora) throws ClinicaException {
+        if (ahora == null) {
+            throw new ClinicaException("Se necesita la fecha y hora actuales para comprobar las normas");
+        }
+        // 1. Domingo
+        if (!Clinica.abre(getFecha())) {
+            throw new ClinicaException("La clínica está cerrada los domingos");
+        }
+        // 2. Horario
+        if (getInicio().isBefore(Clinica.APERTURA) || getFin().isAfter(Clinica.CIERRE)) {
+            throw new ClinicaException("La cita debe empezar y terminar entre las "
+                    + Clinica.APERTURA + " y las " + Clinica.CIERRE);
+        }
+        // 3. Pasado
+        if (LocalDateTime.of(getFecha(), getInicio()).isBefore(ahora)) {
+            throw new ClinicaException("No se puede programar una cita en el pasado");
+        }
+        // 4. Especialidad
+        if (!veterinario.puedeAtender(especialidadRequerida())) {
+            throw new ClinicaException("El veterinario " + veterinario.getNombre()
+                    + " no tiene la especialidad " + especialidadRequerida());
+        }
+        // 5. Normas propias de cada tipo de cita
+        comprobarNormasPropias(ahora);
+    }
+
+    /**
+     * Normas propias de cada tipo de cita. Por defecto no hace nada; las
+     * subclases la redefinen si tienen normas adicionales.
+     */
+    protected void comprobarNormasPropias(LocalDateTime ahora) throws ClinicaException {
+    }
 
     /** Texto con los datos comunes a todas las citas veterinarias. */
     protected String camposComunes() {
