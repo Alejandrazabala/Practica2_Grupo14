@@ -133,6 +133,32 @@ public abstract class CitaVeterinaria extends Cita {
     protected void comprobarNormasPropias(LocalDateTime ahora) throws ClinicaException {
     }
 
+    /**
+     * Termina la cita con un resultado y unas notas (pueden estar vacías).
+     *
+     * @throws ArgumentoException si el resultado es null, las notas son null o la
+     *                            cita ya estaba terminada
+     */
+    public void terminar(Resultado resultado, String notas) throws ArgumentoException {
+        if (resultado == null) {
+            throw new ArgumentoException("El resultado no puede ser nulo");
+        }
+        if (this.resultado != null) {
+            throw new ArgumentoException("La cita ya estaba terminada");
+        }
+        String notasLimpias = texto(notas, "Las notas", true);
+        this.resultado = resultado;
+        this.notas = notasLimpias;
+    }
+
+    /** Dinero que ingresa la cita: su precio si fue atendida y 0 en otro caso. */
+    public int ingreso() {
+        if (resultado == Resultado.ATENDIDA) {
+            return precio();
+        }
+        return 0;
+    }
+
     /** Texto con los datos comunes a todas las citas veterinarias. */
     protected String camposComunes() {
         return getMascota().getNombre() + " (" + getMascota().getId() + ") con "
