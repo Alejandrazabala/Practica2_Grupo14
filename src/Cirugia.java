@@ -1,5 +1,6 @@
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 /**
  * Cirugía. Dura de 30 a 240 minutos, en tramos de 30. Su precio depende de la
@@ -58,6 +59,26 @@ public class Cirugia extends CitaVeterinaria {
     @Override
     public String descripcion() {
         return "Intervención: " + intervencion;
+    }
+
+    /**
+     * Normas propias de la cirugía: dura de 30 a 240 minutos en tramos de 30,
+     * termina como muy tarde a las 14:00 y se programa al menos el día anterior.
+     */
+    @Override
+    protected void comprobarNormasPropias(LocalDateTime ahora) throws ClinicaException {
+        int d = getDuracion();
+        if (d < DURACION_MINIMA || d > DURACION_MAXIMA || d % 30 != 0) {
+            throw new ClinicaException("La cirugía debe durar entre " + DURACION_MINIMA
+                    + " y " + DURACION_MAXIMA + " minutos, en tramos de 30");
+        }
+        if (getFin().isAfter(FIN_MANANA)) {
+            throw new ClinicaException("La cirugía debe terminar como muy tarde a las "
+                    + FIN_MANANA);
+        }
+        if (!getFecha().isAfter(ahora.toLocalDate())) {
+            throw new ClinicaException("La cirugía debe programarse al menos el día anterior");
+        }
     }
 
     /** Devuelve una Cirugia (subtipo de Cita) que empieza a otra hora. */
